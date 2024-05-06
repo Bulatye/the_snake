@@ -39,6 +39,9 @@ class Game:
 
     running = True
 
+    colors = [APPLE_COLOR_1, APPLE_COLOR_2, APPLE_COLOR_3]
+    apple_animation_tic = 0
+
     def __init__(self):
         """Инициализация игры."""
         # Инициализация PyGame:
@@ -72,10 +75,14 @@ class Game:
                     # Получение нового яблока:
                     self.apple = Apple(self.snake.positions, self.field)
                     screen.fill(CYAN)
-                # Отрисовка яблока:
-                self.apple.draw(screen)
                 # Отрисовка сетки:
                 self.field.draw_grid(screen)
+                # Отрисовка яблока c анимацией:
+                if self.apple_animation_tic > 2:
+                    self.apple_animation_tic = 0
+
+                self.apple.draw(screen, self.colors[self.apple_animation_tic])
+                self.apple_animation_tic += 1
 
                 # Обновление направления движения змейки:
                 self.snake.update_direction()

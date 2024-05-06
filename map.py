@@ -45,7 +45,7 @@ class GameField:
         rect = (SCREEN_HEIGHT, SCREEN_HEIGHT, 1, 1)
         count = 0
         for distance in range(0, SCREEN_WIDTH+30, GRID_SIZE):
-            pygame.draw.line(screen, BORDER_COLOR, [distance, 0], [distance, SCREEN_HEIGHT], 3)
+            pygame.draw.line(screen, CYAN, [distance, 0], [distance, SCREEN_HEIGHT], 3)
             count += 1
 
         count = 0

@@ -18,8 +18,6 @@ class Apple():
         draw(screen): Отрисовывает яблоко на экране игры.
     """
 
-    color = SNAKE_COLOR
-
     def __init__(self, snake_positions, Field):
         """Инициализирует объект и устанавливает начальное положение яблока.
 
@@ -48,12 +46,12 @@ class Apple():
 
         return (apple_x, apple_y)
 
-    def draw(self, screen):
+    def draw(self, screen, color):
         """Отрисовывает яблоко на экране игры.
 
         Args:
             screen (pygame.Surface): Экран игры.
         """
         cell = self.game_field[self.position[0]][self.position[1]]
-        rect = pygame.Rect(cell, (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(screen, self.color, rect)
+        rect = pygame.Rect(cell, (GRID_SIZE + 1, GRID_SIZE + 1))
+        pygame.draw.rect(screen, color, rect)
