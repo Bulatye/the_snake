@@ -2,25 +2,26 @@ import threading
 import pygame
 import os
 
-from constants import (
-    SCREEN_WIDTH,
-    SCREEN_HEIGHT,
-    SPEED,
-    BACKGROUND,
-    CYAN,
-    YELLOW_COLOR_1,
-    YELLOW_COLOR_2,
-    YELLOW_COLOR_3,
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
-    FIELD_WIDTH,
-    FIELD_HEIGHT,
-)
 from map import GameField
 from snake import Snake
 from apple import Apple
+
+# Константы для размеров поля и сетки:
+SCREEN_WIDTH, SCREEN_HEIGHT = 642, 482
+FIELD_WIDTH = 32
+FIELD_HEIGHT = 23
+# Скорость движения змейки:
+SPEED = 15
+# Цвета:
+BOARD_BACKGROUND_COLOR = (0, 0, 0)  # Цвет фона - черный
+CYAN = (111, 235, 247)  # Цвет границы ячейки
+YELLOW_COLOR_3 = (245, 250, 80)  # Цвет яблока 3
+BACKGROUND = (0, 0, 0)
+# Направления движения:
+UP = (0, -1)
+DOWN = (0, 1)
+LEFT = (-1, 0)
+RIGHT = (1, 0)
 
 # Настройка игрового окна:
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + 100), 0, 32)
@@ -63,11 +64,10 @@ class Game:
     font = os.path.join("fonts", "8bitOperatorPlus8-Regular.ttf")
     font_size_h1 = 72
     font_size_h2 = 24
-    font_size_h4 = 32
+    font_size_footer_text = 32
 
     running = True
 
-    colors = [YELLOW_COLOR_1, YELLOW_COLOR_2, YELLOW_COLOR_3]
     apple_animation_tic = 0
 
     score = 0
@@ -92,7 +92,7 @@ class Game:
                     self.running = False
 
             # Проверка столкновения змейки с самой собой:
-            if not self.snake.check_snake_clash():
+            if not self.snake.check_snake_collision():
                 self.view_death_screen()
             else:
                 # Управление частотой кадров:
@@ -101,10 +101,12 @@ class Game:
                 screen.fill(BACKGROUND)
                 # Отрисвока имени и рекорда
                 self.view_name_and_score()
+                # Двигаем змейку
+                self.snake.move(screen)
                 # Отрисовка змейки:
                 self.snake.draw(screen)
                 # Проверка столкновения змейки с яблоком:
-                if self.snake.check_apple_clash(self.apple.position):
+                if self.snake.check_apple_collision(self.apple.position):
                     # Получение нового яблока:
                     self.apple = Apple(self.snake.positions, self.field)
                     screen.fill(CYAN)
@@ -116,7 +118,7 @@ class Game:
                 if self.apple_animation_tic > 2:
                     self.apple_animation_tic = 0
 
-                self.apple.draw(screen, self.colors[self.apple_animation_tic])
+                self.apple.draw(screen, self.apple_animation_tic)
                 self.apple_animation_tic += 1
 
                 # Обновление направления движения змейки:
@@ -126,21 +128,6 @@ class Game:
 
         # Завершение игры:
         pygame.quit()
-
-    def event_listener(self):
-        """Функция для прослушивания событий клавиатуры в отдельном потоке.
-        Это необходимо для получения наивысшей отзывчивости змеи.
-        """
-        while self.running:
-            keys = pygame.key.get_pressed()
-            if keys[pygame.K_UP] and self.snake.direction != DOWN:
-                self.snake.next_direction = UP
-            elif keys[pygame.K_DOWN] and self.snake.direction != UP:
-                self.snake.next_direction = DOWN
-            elif keys[pygame.K_LEFT] and self.snake.direction != RIGHT:
-                self.snake.next_direction = LEFT
-            elif keys[pygame.K_RIGHT] and self.snake.direction != LEFT:
-                self.snake.next_direction = RIGHT
 
     def view_death_screen(self):
         """Функция для отображения экрана смерти."""
@@ -186,14 +173,15 @@ class Game:
                 self.running = False
             elif keys[pygame.K_r]:
                 # Перезапускаем игру
-                self.snake.reset()
                 self.score = 0
+                self.snake.next_direction = UP
+                self.snake.reset()
 
     def view_name_and_score(self):
         """Функция для отображения имени игрока и текущего счета."""
         # Создание объектов текста
-        font_score = pygame.font.Font(self.font, self.font_size_h4)
-        font_nickname = pygame.font.Font(self.font, self.font_size_h4)
+        font_score = pygame.font.Font(self.font, self.font_size_h2)
+        font_nickname = pygame.font.Font(self.font, self.font_size_h2)
 
         text_score = font_score.render(str(self.score), True, YELLOW_COLOR_3)
         text_nickname = font_nickname.render(self.nickname, True, CYAN)
@@ -212,9 +200,30 @@ class Game:
         screen.blit(text_nickname, TEXT_NICKNAME)
 
 
-if __name__ == '__main__':
+def handle_keys(game):
+    """Функция для прослушивания событий клавиатуры в отдельном потоке.
+    Это необходимо для получения наивысшей отзывчивости змеи.
+    """
+    while game.running:
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_UP] and game.snake.direction != DOWN:
+            game.snake.next_direction = UP
+        elif keys[pygame.K_DOWN] and game.snake.direction != UP:
+            game.snake.next_direction = DOWN
+        elif keys[pygame.K_LEFT] and game.snake.direction != RIGHT:
+            game.snake.next_direction = LEFT
+        elif keys[pygame.K_RIGHT] and game.snake.direction != LEFT:
+            game.snake.next_direction = RIGHT
+
+
+def main():
+    """Запуск потоков игры."""
     # Создание объекта игры и запуск основной функции:
     game = Game()
-    input_thread = threading.Thread(target=game.event_listener)
+    input_thread = threading.Thread(target=handle_keys, args=(game,))
     input_thread.start()
     game.main()
+
+
+if __name__ == '__main__':
+    main()
