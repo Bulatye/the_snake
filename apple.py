@@ -1,8 +1,9 @@
 import pygame
 from random import randint
-from constants import *
+from constants import GRID_SIZE, FIELD_WIDTH, FIELD_HEIGHT
 
-class Apple():
+
+class Apple:
     """Класс, представляющий яблоко в игре.
 
     Этот класс отвечает за логику и отображение яблока на игровом поле.
@@ -13,12 +14,14 @@ class Apple():
         game_field (list): Двумерный массив, представляющий игровое поле.
 
     Методы:
-        __init__(snake_positions, Field): Инициализирует объект яблока и устанавливает его начальное положение.
-        randomize_position(snake_positions): Генерирует случайное положение яблока на игровом поле.
+        __init__(snake_positions, Field):
+        Инициализирует объект яблока и устанавливает его начальное положение.
+        randomize_position(snake_positions):
+        Генерирует случайное положение яблока на игровом поле.
         draw(screen): Отрисовывает яблоко на экране игры.
     """
 
-    def __init__(self, snake_positions, Field):
+    def __init__(self, snake_positions, field):
         """Инициализирует объект и устанавливает начальное положение яблока.
 
         Args:
@@ -26,7 +29,7 @@ class Apple():
             Field (object): Объект поля игры.
         """
         self.position = self.randomize_position(snake_positions)
-        self.game_field = Field.field
+        self.game_field = field.field
 
     def randomize_position(self, snake_positions):
         """Генерирует случайные координаты яблока на игровом поле.
@@ -51,6 +54,7 @@ class Apple():
 
         Args:
             screen (pygame.Surface): Экран игры.
+            color (tuple): Цвет яблока в формате RGB.
         """
         cell = self.game_field[self.position[0]][self.position[1]]
         rect = pygame.Rect(cell, (GRID_SIZE + 1, GRID_SIZE + 1))

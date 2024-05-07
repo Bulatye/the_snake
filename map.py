@@ -1,9 +1,16 @@
-from constants import *
+from constants import (
+    SCREEN_WIDTH,
+    SCREEN_HEIGHT,
+    GRID_SIZE,
+    CYAN,
+    FIELD_WIDTH,
+    FIELD_HEIGHT,
+)
 import pygame
+
 
 class GameField:
     """Класс, представляющий игровое поле.
-
     Этот класс инициализирует игровое поле с заданными шириной и высотой.
 
     Атрибуты:
@@ -11,7 +18,8 @@ class GameField:
         matrix (list): Двумерный массив, представляющий игровое поле.
 
     Методы:
-        __init__(self, width, height): Инициализирует объект игрового поля с заданными размерами.
+        __init__(self, width, height):
+        Инициализирует объект игрового поля с заданными размерами.
         draw_grid(screen): Рисует сетку на игровом поле.
 
     """
@@ -42,13 +50,16 @@ class GameField:
         Args:
             screen (pygame.Surface): Экран игры.
         """
-        rect = (SCREEN_HEIGHT, SCREEN_HEIGHT, 1, 1)
         count = 0
-        for distance in range(0, SCREEN_WIDTH+30, GRID_SIZE):
-            pygame.draw.line(screen, CYAN, [distance, 0], [distance, SCREEN_HEIGHT], 3)
+        for distance in range(0, SCREEN_WIDTH + 30, GRID_SIZE):
+            x = [distance, 0]
+            y = [distance, SCREEN_HEIGHT]
+            pygame.draw.line(screen, CYAN, x, y, 3)
             count += 1
 
         count = 0
-        for distance in range(0, SCREEN_HEIGHT+30, GRID_SIZE):
-            pygame.draw.line(screen, CYAN, [0, distance], [SCREEN_WIDTH, distance], 3)
+        for distance in range(0, SCREEN_HEIGHT, GRID_SIZE):
+            x = [0, distance]
+            y = [SCREEN_WIDTH, distance]
+            pygame.draw.line(screen, CYAN, x, y, 3)
             count += 1

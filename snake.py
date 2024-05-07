@@ -1,7 +1,18 @@
 import pygame
-from constants import *
+from constants import (
+    BACKGROUND,
+    UP,
+    DOWN,
+    LEFT,
+    RIGHT,
+    FIELD_WIDTH,
+    FIELD_HEIGHT,
+    SNAKE_COLOR,
+    GRID_SIZE
+)
 
-class Snake():
+
+class Snake:
     """Класс, представляющий змею в игре.
 
     Этот класс обеспечивает логику и поведение змеи в игровом мире.
@@ -16,7 +27,8 @@ class Snake():
     Методы:
         update_direction(): Обновляет текущее направление змеи.
         draw(screen): Отрисовывает змею на экране игры.
-        check_apple_clash(apple_position): Проверяет столкновение змеи с яблоком.
+        check_apple_clash(apple_position):
+        Проверяет столкновение змеи с яблоком.
         check_snake_clash(): Проверяет столкновение змеи с самой собой.
         reset(): Сбрасывает состояние змеи до начального.
 
@@ -27,7 +39,8 @@ class Snake():
     color = SNAKE_COLOR
 
     def __init__(self, snake, field):
-        """Инициализирует объект и устанавливает начальное положение змеи на поле.
+        """Инициализирует объект и устанавливает
+        начальное положение змеи на поле.
 
         Args:
             snake (list): Начальное положение змеи на поле.
@@ -44,7 +57,7 @@ class Snake():
 
     def draw(self, screen):
         """Основной метод змеи.
-        Отрисовывает тело змеи, голову с учетом ее направления, затирает ее хвост.
+        Отрисовывает тело змеи, голову с учетом ее направления, затирает хвост.
         Создает движение змеи.
         """
         # Отрисовка змеи
@@ -67,16 +80,22 @@ class Snake():
             self.positions[0][0] = FIELD_WIDTH - 1
 
         # Создание координат следующей ячейки
-        next_cell = [self.positions[0][0] + self.direction[0], self.positions[0][1] + self.direction[1]]
+        x = self.positions[0][0] + self.direction[0]
+        y = self.positions[0][1] + self.direction[1]
+        next_cell = [x, y]
         self.positions.insert(0, next_cell)
 
         # Рисование головы змеи
-        snake_head = self.game_field[self.positions[0][0]][self.positions[0][1]]
+        x = self.positions[0][0]
+        y = self.positions[0][1]
+        snake_head = self.game_field[x][y]
         head_rect = pygame.Rect(snake_head, (GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(screen, self.color, head_rect)
 
         # Затирание последнего сегмента
-        snake_tail = self.game_field[self.positions[-1][0]][self.positions[-1][1]]
+        x = self.positions[-1][0]
+        y = self.positions[-1][1]
+        snake_tail = self.game_field[x][y]
         last_rect = pygame.Rect(snake_tail, (GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(screen, BACKGROUND, last_rect)
 
@@ -98,6 +117,6 @@ class Snake():
 
     def reset(self):
         """Сбрасывает змею, устанавливая ее в начальное состояние."""
-        body_snake = [[16, 12], [16, 11], [16, 10]]
+        body_snake = [[16, 10], [16, 11], [16, 12]]
         self.positions = body_snake
         self.next_direction = None
