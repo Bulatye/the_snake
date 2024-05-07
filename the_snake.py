@@ -1,7 +1,6 @@
 import threading
 import pygame
-import os
-from abc import ABC, abstractmethod
+import osя
 
 from map import GameField
 from snake import Snake
@@ -35,8 +34,8 @@ clock = pygame.time.Clock()
 class GameObject(ABC):
     """Класс, представляющий игровой объект."""
 
-    self.position = (0, 0)
-    self.body_color = None
+    position = (0, 0)
+    body_color = None
 
     def __init__(self):
         """Инициализирует базовые атрибуты игрового объекта."""
