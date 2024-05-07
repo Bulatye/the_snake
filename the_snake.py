@@ -35,14 +35,13 @@ clock = pygame.time.Clock()
 class GameObject(ABC):
     """Класс, представляющий игровой объект."""
 
+    self.position = (0, 0)
+    self.body_color = None
+
     def __init__(self):
         """Инициализирует базовые атрибуты игрового объекта."""
-        # Позиция объекта на игровом поле (инициализирована как центр экрана)
-        self.position = (0, 0)
-        # Цвет объекта (не определен явно в классе GameObject)
-        self.body_color = None
+        pass
 
-    @abstractmethod
     def draw(self):
         """
         Абстрактный метод,
