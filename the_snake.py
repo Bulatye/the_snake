@@ -1,6 +1,6 @@
 import threading
 import pygame
-import osя
+import os
 
 from map import GameField
 from snake import Snake
@@ -31,7 +31,7 @@ pygame.display.set_caption('SNAKEEEE')
 clock = pygame.time.Clock()
 
 
-class GameObject(ABC):
+class GameObject():
     """Класс, представляющий игровой объект."""
 
     position = (0, 0)
