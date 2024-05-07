@@ -1,7 +1,7 @@
 import pygame
 from random import randint
 
-from gameobject import GameObject
+from the_snake import GameObject
 from constants import (
     GRID_SIZE,
     FIELD_WIDTH,

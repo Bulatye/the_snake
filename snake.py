@@ -1,6 +1,6 @@
 import pygame
 
-from gameobject import GameObject
+from the_snake import GameObject
 from constants import (
     BACKGROUND,
     UP,

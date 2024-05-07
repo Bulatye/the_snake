@@ -1,6 +1,7 @@
 import threading
 import pygame
 import os
+from abc import ABC, abstractmethod
 
 from map import GameField
 from snake import Snake
@@ -29,6 +30,27 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + 100), 0, 32)
 pygame.display.set_caption('SNAKEEEE')
 # Настройка времени:
 clock = pygame.time.Clock()
+
+
+class GameObject(ABC):
+    """Класс, представляющий игровой объект."""
+
+    def __init__(self):
+        """Инициализирует базовые атрибуты игрового объекта."""
+        # Позиция объекта на игровом поле (инициализирована как центр экрана)
+        self.position = (0, 0)
+        # Цвет объекта (не определен явно в классе GameObject)
+        self.body_color = None
+
+    @abstractmethod
+    def draw(self):
+        """
+        Абстрактный метод,
+        который должен быть переопределен в дочерни хклассах.
+        Этот метод определяет, как объект будет отображаться на экране.
+        По умолчанию он ничего не делает.
+        """
+        pass
 
 
 class Game:
