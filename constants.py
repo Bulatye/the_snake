@@ -6,7 +6,7 @@ GRID_HEIGHT = SCREEN_HEIGHT // GRID_SIZE
 BACKGROUND = (0, 0, 0)
 
 FIELD_WIDTH = 32
-FIELD_HEIGHT = 23
+FIELD_HEIGHT = 24
 
 # Направления движения:
 UP = (0, -1)

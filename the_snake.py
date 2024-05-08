@@ -89,6 +89,7 @@ class Game:
     running = True
 
     apple_animation_tic = 0
+    animation_timer = 0
 
     score = 0
     nickname = "bulatue"
@@ -113,6 +114,7 @@ class Game:
 
             # Проверка столкновения змейки с самой собой:
             if not self.snake.check_snake_collision():
+                print(f"Score: {self.score}")
                 self.view_death_screen()
             else:
                 # Управление частотой кадров:
@@ -121,10 +123,10 @@ class Game:
                 screen.fill(BACKGROUND)
                 # Отрисвока имени и рекорда
                 self.view_name_and_score()
-                # Двигаем змейку
-                self.snake.move(screen)
                 # Отрисовка змейки:
                 self.snake.draw(screen)
+                # Двигаем змейку
+                self.snake.move(screen)
                 # Проверка столкновения змейки с яблоком:
                 if self.snake.check_apple_collision(self.apple.position):
                     # Получение нового яблока:
@@ -135,14 +137,16 @@ class Game:
                 # Отрисовка сетки:
                 self.field.draw_grid(screen)
                 # Отрисовка яблока c анимацией:
+                if self.animation_timer == 3:
+                    self.apple_animation_tic += 1
+                    self.animation_timer = 0
+
                 if self.apple_animation_tic > 2:
                     self.apple_animation_tic = 0
 
                 self.apple.draw(screen, self.apple_animation_tic)
-                self.apple_animation_tic += 1
+                self.animation_timer += 1
 
-                # Обновление направления движения змейки:
-                self.snake.update_direction()
                 # Обновление экрана:
                 pygame.display.update()
 
@@ -194,7 +198,7 @@ class Game:
             elif keys[pygame.K_r]:
                 # Перезапускаем игру
                 self.score = 0
-                self.snake.next_direction = UP
+                self.snake.direction = UP
                 self.snake.reset()
 
     def view_name_and_score(self):
@@ -226,6 +230,7 @@ def handle_keys(game):
     """
     while game.running:
         keys = pygame.key.get_pressed()
+
         if keys[pygame.K_UP] and game.snake.direction != DOWN:
             game.snake.next_direction = UP
         elif keys[pygame.K_DOWN] and game.snake.direction != UP:
@@ -234,6 +239,9 @@ def handle_keys(game):
             game.snake.next_direction = LEFT
         elif keys[pygame.K_RIGHT] and game.snake.direction != LEFT:
             game.snake.next_direction = RIGHT
+
+        # Обновление направления движения змейки:
+        game.snake.update_direction()
 
 
 def main():

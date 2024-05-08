@@ -37,6 +37,7 @@ class Snake(GameObject):
     """
 
     direction = UP
+    double_direction = None
     next_direction = None
     body_color = SNAKE_COLOR
 
@@ -61,12 +62,9 @@ class Snake(GameObject):
         """Основной метод змеи.
         Отрисовывает тело змеи.
         """
-        # Получаем координаты головы змеи.
-        x_head, y_head = self.get_head_position()
         # Отрисовка змеи
         for position in self.positions:
             x_body, y_body = position[0], position[1]
-
             cell = self.game_field[x_body][y_body]
             rect = pygame.Rect(cell, (GRID_SIZE, GRID_SIZE))
             pygame.draw.rect(screen, self.body_color, rect)
@@ -76,27 +74,31 @@ class Snake(GameObject):
         Отрисовывает голову с учетом ее направления, затирает хвост.
         Создает движение змеи.
         """
-        # Обработка события, если змейка достигла края окнаs
+        # Обработка события, если змейка достигла края окна
         x_head, y_head = self.get_head_position()
-        if y_head == FIELD_HEIGHT and self.direction == DOWN:
-            self.positions[0][1] = 0
-            print(self.positions[0][1])
+        end_field = True
+
+        if y_head == FIELD_HEIGHT - 1 and self.direction == DOWN:
+            y_head = 0
         elif y_head == 0 and self.direction == UP:
-            self.positions[0][1] = FIELD_HEIGHT
-
-        if x_head == FIELD_WIDTH - 1 and self.direction == RIGHT:
-            self.positions[0][0] = 0
+            y_head = FIELD_HEIGHT - 1
+        elif x_head == FIELD_WIDTH - 1 and self.direction == RIGHT:
+            x_head = 0
         elif x_head == 0 and self.direction == LEFT:
-            self.positions[0][0] = FIELD_WIDTH - 1
+            x_head = FIELD_WIDTH - 1
+        else:
+            end_field = False
 
-        x_head, y_head = self.get_head_position()
-        # Создание координат следующей ячейки
-        x_next = x_head + self.direction[0]
-        y_next = y_head + self.direction[1]
+        if not end_field:
+            x_next = x_head + self.direction[0]
+            y_next = y_head + self.direction[1]
+        else:
+            x_next, y_next = x_head, y_head
+
         self.positions.insert(0, [x_next, y_next])
 
-        # Рисование головы змеи
-        snake_head = self.game_field[x_head][y_head]
+        # Рисуем голову змеи
+        snake_head = self.game_field[x_next][y_next]
         head_rect = pygame.Rect(snake_head, (GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(screen, self.body_color, head_rect)
 
