@@ -37,7 +37,7 @@ class Snake(GameObject):
     """
 
     direction = UP
-    double_direction = None
+    double_direction = False
     next_direction = None
     body_color = SNAKE_COLOR
 

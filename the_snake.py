@@ -114,19 +114,18 @@ class Game:
 
             # Проверка столкновения змейки с самой собой:
             if not self.snake.check_snake_collision():
-                print(f"Score: {self.score}")
                 self.view_death_screen()
-            else:
+            else:                                                                           
                 # Управление частотой кадров:
                 clock.tick(SPEED)
                 # Очистка экрана:
                 screen.fill(BACKGROUND)
                 # Отрисвока имени и рекорда
                 self.view_name_and_score()
-                # Отрисовка змейки:
-                self.snake.draw(screen)
                 # Двигаем змейку
                 self.snake.move(screen)
+                # Отрисовка змейки:
+                self.snake.draw(screen)
                 # Проверка столкновения змейки с яблоком:
                 if self.snake.check_apple_collision(self.apple.position):
                     # Получение нового яблока:
@@ -137,6 +136,7 @@ class Game:
                 # Отрисовка сетки:
                 self.field.draw_grid(screen)
                 # Отрисовка яблока c анимацией:
+                
                 if self.animation_timer == 3:
                     self.apple_animation_tic += 1
                     self.animation_timer = 0
@@ -156,6 +156,7 @@ class Game:
     def view_death_screen(self):
         """Функция для отображения экрана смерти."""
         # Отчищаем экран.
+        print(f"Score: {self.score}")
         screen.fill(BACKGROUND)
         # Уведомляем пользователя о его смерти.
         # Спрашиваем хочет ли он начать сначала.
@@ -230,6 +231,48 @@ def handle_keys(game):
     """
     while game.running:
         keys = pygame.key.get_pressed()
+        # Обработка двойного нажатия клавиш вверх и вправо
+        # up > down : d - s
+        if keys[pygame.K_RIGHT] and keys[pygame.K_DOWN]:
+            game.snake.direction = RIGHT
+            game.snake.next_direction = DOWN
+            continue
+        # up > down : a - s         
+        elif keys[pygame.K_LEFT] and keys[pygame.K_DOWN]:
+            game.snake.direction = LEFT
+            game.snake.next_direction = DOWN
+            continue
+        # down > up : a - w
+        elif keys[pygame.K_LEFT] and keys[pygame.K_UP]:
+            game.snake.direction = LEFT
+            game.snake.next_direction = UP
+            continue
+        # down > up : d - w
+        elif keys[pygame.K_RIGHT] and keys[pygame.K_UP]:
+            game.snake.direction = RIGHT
+            game.snake.next_direction = UP
+            continue
+        # right > left : w - a
+        elif keys[pygame.K_UP] and keys[pygame.K_LEFT]:
+            game.snake.direction = UP
+            game.snake.next_direction = LEFT
+            continue
+        # right > left: s - a
+        elif keys[pygame.K_DOWN] and keys[pygame.K_LEFT]:
+            game.snake.direction = DOWN
+            game.snake.next_direction = LEFT
+            continue
+        # left > right: w - d
+        elif keys[pygame.K_UP] and keys[pygame.K_RIGHT]:
+            game.snake.direction = UP
+            game.snake.next_direction = RIGHT
+            continue
+        # left > right: s - d
+        elif keys[pygame.K_DOWN] and keys[pygame.K_RIGHT]:
+            game.snake.direction = DOWN
+            game.snake.next_direction = RIGHT
+            continue
+
 
         if keys[pygame.K_UP] and game.snake.direction != DOWN:
             game.snake.next_direction = UP
@@ -242,7 +285,6 @@ def handle_keys(game):
 
         # Обновление направления движения змейки:
         game.snake.update_direction()
-
 
 def main():
     """Запуск потоков игры."""
