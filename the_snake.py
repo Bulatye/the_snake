@@ -203,7 +203,6 @@ class Game:
 
     def view_name_and_score(self):
         """Функция для отображения имени игрока и текущего счета."""
-
         # Создание объектов текста
         font_score = pygame.font.Font(self.font, self.font_size_h2)
         font_nickname = pygame.font.Font(self.font, self.font_size_h2)
@@ -231,60 +230,51 @@ def handle_keys(game):
     """
     while game.running:
         keys = pygame.key.get_pressed()
-        # Обработка двойного нажатия клавиш вверх и вправо
-        # up > down : d - s
-        if keys[pygame.K_RIGHT] and keys[pygame.K_DOWN]:
-            game.snake.direction = RIGHT
-            game.snake.next_direction = DOWN
-            continue
-        # up > down : a - s         
-        elif keys[pygame.K_LEFT] and keys[pygame.K_DOWN]:
-            game.snake.direction = LEFT
-            game.snake.next_direction = DOWN
-            continue
-        # down > up : a - w
-        elif keys[pygame.K_LEFT] and keys[pygame.K_UP]:
-            game.snake.direction = LEFT
-            game.snake.next_direction = UP
-            continue
-        # down > up : d - w
-        elif keys[pygame.K_RIGHT] and keys[pygame.K_UP]:
-            game.snake.direction = RIGHT
-            game.snake.next_direction = UP
-            continue
-        # right > left : w - a
-        elif keys[pygame.K_UP] and keys[pygame.K_LEFT]:
-            game.snake.direction = UP
-            game.snake.next_direction = LEFT
-            continue
-        # right > left: s - a
-        elif keys[pygame.K_DOWN] and keys[pygame.K_LEFT]:
-            game.snake.direction = DOWN
-            game.snake.next_direction = LEFT
-            continue
-        # left > right: w - d
-        elif keys[pygame.K_UP] and keys[pygame.K_RIGHT]:
-            game.snake.direction = UP
-            game.snake.next_direction = RIGHT
-            continue
-        # left > right: s - d
-        elif keys[pygame.K_DOWN] and keys[pygame.K_RIGHT]:
-            game.snake.direction = DOWN
-            game.snake.next_direction = RIGHT
-            continue
-
-
-        if keys[pygame.K_UP] and game.snake.direction != DOWN:
-            game.snake.next_direction = UP
-        elif keys[pygame.K_DOWN] and game.snake.direction != UP:
-            game.snake.next_direction = DOWN
-        elif keys[pygame.K_LEFT] and game.snake.direction != RIGHT:
-            game.snake.next_direction = LEFT
-        elif keys[pygame.K_RIGHT] and game.snake.direction != LEFT:
-            game.snake.next_direction = RIGHT
-
-        # Обновление направления движения змейки:
+        handle_double_keys(game, keys)
+        handle_single_keys(game, keys)
         game.snake.update_direction()
+
+
+def handle_double_keys(game, keys):
+    """Обработка двойных нажатий клавиш."""
+    double_key_actions = {
+        (pygame.K_RIGHT, pygame.K_DOWN): (RIGHT, DOWN),
+        (pygame.K_LEFT, pygame.K_DOWN): (LEFT, DOWN),
+        (pygame.K_LEFT, pygame.K_UP): (LEFT, UP),
+        (pygame.K_RIGHT, pygame.K_UP): (RIGHT, UP),
+        (pygame.K_UP, pygame.K_LEFT): (UP, LEFT),
+        (pygame.K_DOWN, pygame.K_LEFT): (DOWN, LEFT),
+        (pygame.K_UP, pygame.K_RIGHT): (UP, RIGHT),
+        (pygame.K_DOWN, pygame.K_RIGHT): (DOWN, RIGHT),
+    }
+    for keys_combination, directions in double_key_actions.items():
+        if keys[keys_combination[0]] and keys[keys_combination[1]]:
+            game.snake.direction = directions[0]
+            game.snake.next_direction = directions[1]
+
+
+def handle_single_keys(game, keys):
+    """Обработка одиночных нажатий клавиш."""
+    key_actions = {
+        pygame.K_UP: UP,
+        pygame.K_DOWN: DOWN,
+        pygame.K_LEFT: LEFT,
+        pygame.K_RIGHT: RIGHT,
+    }
+    for key, direction in key_actions.items():
+        if keys[key] and game.snake.direction != opposite_direction(direction):
+            game.snake.next_direction = direction
+
+
+def opposite_direction(direction):
+    """Возвращает противоположное направление."""
+    return {
+        UP: DOWN,
+        DOWN: UP,
+        LEFT: RIGHT,
+        RIGHT: LEFT,
+    }[direction]
+
 
 def main():
     """Запуск потоков игры."""
