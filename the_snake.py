@@ -115,7 +115,7 @@ class Game:
             # Проверка столкновения змейки с самой собой:
             if not self.snake.check_snake_collision():
                 self.view_death_screen()
-            else:                                                                           
+            else:
                 # Управление частотой кадров:
                 clock.tick(SPEED)
                 # Очистка экрана:
@@ -136,7 +136,6 @@ class Game:
                 # Отрисовка сетки:
                 self.field.draw_grid(screen)
                 # Отрисовка яблока c анимацией:
-                
                 if self.animation_timer == 3:
                     self.apple_animation_tic += 1
                     self.animation_timer = 0
@@ -204,6 +203,7 @@ class Game:
 
     def view_name_and_score(self):
         """Функция для отображения имени игрока и текущего счета."""
+
         # Создание объектов текста
         font_score = pygame.font.Font(self.font, self.font_size_h2)
         font_nickname = pygame.font.Font(self.font, self.font_size_h2)
