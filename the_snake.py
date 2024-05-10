@@ -79,7 +79,6 @@ class Apple(GameObject):
         draw(screen): Отрисовывает яблоко на экране игры.
     """
 
-    position = (15, 11)
     body_color = APPLE_COLOR
 
     def __init__(self, snake_positions=(0, 0), field=None):
@@ -123,6 +122,7 @@ class Apple(GameObject):
         cell = self.game_field[self.position[0]][self.position[1]]
         rect = pygame.Rect(cell, (GRID_SIZE + 1, GRID_SIZE + 1))
         pygame.draw.rect(screen, self.body_color[animation_tic], rect)
+
 
 
 class Snake(GameObject):
@@ -333,7 +333,7 @@ class Game:
                 # Проверка столкновения змейки с яблоком:
                 if self.snake.check_apple_collision(self.apple.position):
                     # Получение нового яблока:
-                    self.apple = Apple(self.snake.positions, self.field)
+                    self.apple = Apple(self.snake.positions, self.field.field)
                     screen.fill(CYAN)
                     self.score += 1
 
