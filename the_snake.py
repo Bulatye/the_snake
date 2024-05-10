@@ -124,7 +124,6 @@ class Apple(GameObject):
         pygame.draw.rect(screen, self.body_color[animation_tic], rect)
 
 
-
 class Snake(GameObject):
     """Класс, представляющий змею в игре.
 
