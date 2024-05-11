@@ -102,7 +102,7 @@ class Apple(GameObject):
         apple_x = randint(0, FIELD_WIDTH - 1)
         apple_y = randint(0, FIELD_HEIGHT - 1)
 
-        while (apple_x, apple_y) in snake_positions:
+        while [apple_x, apple_y] in snake_positions:
             apple_x = randint(0, FIELD_WIDTH - 1)
             apple_y = randint(0, FIELD_HEIGHT - 1)
 
@@ -431,34 +431,8 @@ class Game:
 
 
 def handle_keys(snake):
-    """Функция для прослушивания событий клавиатуры в отдельном потоке.
-    Это необходимо для получения наивысшей отзывчивости змеи.
-    """
-    keys = pygame.key.get_pressed()
-    handle_double_keys(keys, snake)
-    handle_single_keys(keys, snake)
-
-
-def handle_double_keys(keys, snake):
-    """Обработка двойных нажатий клавиш."""
-    double_key_actions = {
-        (pygame.K_RIGHT, pygame.K_DOWN): (RIGHT, DOWN),
-        (pygame.K_LEFT, pygame.K_DOWN): (LEFT, DOWN),
-        (pygame.K_LEFT, pygame.K_UP): (LEFT, UP),
-        (pygame.K_RIGHT, pygame.K_UP): (RIGHT, UP),
-        (pygame.K_UP, pygame.K_LEFT): (UP, LEFT),
-        (pygame.K_DOWN, pygame.K_LEFT): (DOWN, LEFT),
-        (pygame.K_UP, pygame.K_RIGHT): (UP, RIGHT),
-        (pygame.K_DOWN, pygame.K_RIGHT): (DOWN, RIGHT),
-    }
-    for keys_combination, directions in double_key_actions.items():
-        if keys[keys_combination[0]] and keys[keys_combination[1]]:
-            snake.direction = directions[0]
-            snake.next_direction = directions[1]
-
-
-def handle_single_keys(keys, snake):
     """Обработка одиночных нажатий клавиш."""
+    keys = pygame.key.get_pressed()
     key_actions = {
         pygame.K_UP: UP,
         pygame.K_DOWN: DOWN,
@@ -468,6 +442,7 @@ def handle_single_keys(keys, snake):
     for key, direction in key_actions.items():
         if keys[key] and snake.direction != opposite_direction(direction):
             snake.direction = direction
+            return None
 
 
 def opposite_direction(direction):
