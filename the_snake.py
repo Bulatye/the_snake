@@ -1,4 +1,3 @@
-import threading
 import pygame
 import os
 from random import randint
@@ -79,7 +78,7 @@ class Apple(GameObject):
         draw(screen): Отрисовывает яблоко на экране игры.
     """
 
-    body_color = APPLE_COLOR
+    body_color = [YELLOW_COLOR_1, YELLOW_COLOR_2, YELLOW_COLOR_3]
 
     def __init__(self, snake_positions=(0, 0), field=None):
         """Инициализирует объект и устанавливает начальное положение яблока.
@@ -90,7 +89,6 @@ class Apple(GameObject):
         """
         self.position = self.randomize_position(snake_positions)
         self.game_field = field
-        self.body_color = [YELLOW_COLOR_1, YELLOW_COLOR_2, YELLOW_COLOR_3]
 
     def randomize_position(self, snake_positions):
         """Генерирует случайные координаты яблока на игровом поле.
@@ -110,18 +108,20 @@ class Apple(GameObject):
 
         return (apple_x, apple_y)
 
-    def draw(self, screen, animation_tic):
+    def draw(self, screen, animation_frame):
         """Отрисовывает яблоко на экране игры.
         Реализована анимация, каждые три кадра
         чередуются сущетсвующие цвета.
 
         Args:
             screen (pygame.Surface): Экран игры.
-            animation_tic (int): Кадр анимации.
+            animation_frame (int): Кадр анимации.
         """
-        cell = self.game_field[self.position[0]][self.position[1]]
+        apple_x, apple_y = self.position[0], self.position[1]
+
+        cell = self.game_field[apple_x][apple_y]
         rect = pygame.Rect(cell, (GRID_SIZE + 1, GRID_SIZE + 1))
-        pygame.draw.rect(screen, self.body_color[animation_tic], rect)
+        pygame.draw.rect(screen, self.body_color[animation_frame], rect)
 
 
 class Snake(GameObject):
@@ -147,11 +147,12 @@ class Snake(GameObject):
     """
 
     direction = UP
-    double_direction = False
+    # атрибут не используется
     next_direction = None
     body_color = SNAKE_COLOR
+    double_press = False
 
-    def __init__(self, snake=(0, 0), field=[0, 0]):
+    def __init__(self, positions=(0, 0), game_field=[0, 0]):
         """Инициализирует объект и устанавливает
         начальное положение змеи на поле.
 
@@ -159,14 +160,14 @@ class Snake(GameObject):
             snake (list): Начальное положение змеи на поле.
             field (list): Игровое поле, полезно для отрисовки змеи.
         """
-        self.positions = list(snake)
-        self.game_field = field
+        self.positions = list(positions)
+        self.game_field = game_field
 
-    def update_direction(self):
+    def update_direction(self, direction, next_direction):
         """Обновляет направление змеи."""
-        if self.next_direction:
-            self.direction = self.next_direction
-            self.next_direction = None
+        self.direction = direction
+        self.next_direction = next_direction
+        self.double_press = True
 
     def draw(self, screen):
         """Основной метод змеи.
@@ -186,8 +187,11 @@ class Snake(GameObject):
         """
         # Обработка события, если змейка достигла края окна
         x_head, y_head = self.get_head_position()
+        # Флаг указывающий, что змейка достигла края
         end_field = True
 
+        # Если голова змеи достигла края,
+        # переносим голову в противоположнную сторону
         if y_head == FIELD_HEIGHT - 1 and self.direction == DOWN:
             y_head = 0
         elif y_head == 0 and self.direction == UP:
@@ -200,15 +204,17 @@ class Snake(GameObject):
             end_field = False
 
         if not end_field:
-            x_next = x_head + self.direction[0]
-            y_next = y_head + self.direction[1]
+            # Получаем следующие координаты головы змеи
+            x_head_next = x_head + self.direction[0]
+            y_head_next = y_head + self.direction[1]
         else:
-            x_next, y_next = x_head, y_head
+            x_head_next, y_head_next = x_head, y_head
 
-        self.positions.insert(0, [x_next, y_next])
+        self.positions.insert(0, [x_head_next, y_head_next])
 
+        # Получаем координаты головы на игровом поле
+        snake_head = self.game_field[x_head_next][y_head_next]
         # Рисуем голову змеи
-        snake_head = self.game_field[x_next][y_next]
         head_rect = pygame.Rect(snake_head, (GRID_SIZE, GRID_SIZE))
         pygame.draw.rect(screen, self.body_color, head_rect)
 
@@ -249,8 +255,8 @@ class Snake(GameObject):
 
     def reset(self):
         """Сбрасывает змею, устанавливая ее в начальное состояние."""
-        body_snake = [[16, 10], [16, 11], [16, 12]]
-        self.positions = body_snake
+        snake_body = [[16, 10], [16, 11], [16, 12]]
+        self.positions = snake_body
         self.next_direction = None
 
 
@@ -271,7 +277,7 @@ class Game:
         font_size_footer_text: Размер шрифта для текста в нижнем колонтитуле.
         running: Флаг для указания состояния игры (запущена или завершена).
         colors: Список цветов для анимации яблока.
-        apple_animation_tic: Переменная для анимации яблока.
+        apple_animation_frame: Переменная для анимации яблока.
         score: Очки игрока.
         nickname: Никнейм игрока.
 
@@ -285,13 +291,15 @@ class Game:
     """
 
     font = os.path.join("fonts", "8bitOperatorPlus8-Regular.ttf")
+    # Размеры шрифтов.
     font_size_h1 = 72
     font_size_h2 = 24
     font_size_footer_text = 32
 
+    # Состояние игры.
     running = True
-
-    apple_animation_tic = 0
+    # Счетчики анимации яблока.
+    apple_animation_frame = 0
     animation_timer = 0
 
     score = 0
@@ -314,11 +322,11 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     self.running = False
-
             # Проверка столкновения змейки с самой собой:
             if not self.snake.check_snake_collision():
                 self.view_death_screen()
             else:
+                handle_keys(self.snake)
                 # Управление частотой кадров:
                 clock.tick(SPEED)
                 # Очистка экрана:
@@ -340,13 +348,13 @@ class Game:
                 self.field.draw_grid(screen)
                 # Отрисовка яблока c анимацией:
                 if self.animation_timer == 3:
-                    self.apple_animation_tic += 1
+                    self.apple_animation_frame += 1
                     self.animation_timer = 0
 
-                if self.apple_animation_tic > 2:
-                    self.apple_animation_tic = 0
+                if self.apple_animation_frame > 2:
+                    self.apple_animation_frame = 0
 
-                self.apple.draw(screen, self.apple_animation_tic)
+                self.apple.draw(screen, self.apple_animation_frame)
                 self.animation_timer += 1
 
                 # Обновление экрана:
@@ -413,32 +421,25 @@ class Game:
         text_score = font_score.render(str(self.score), True, YELLOW_COLOR_3)
         text_nickname = font_nickname.render(self.nickname, True, CYAN)
 
-        # Центральные координаты текста оповещающем о смерти:
-        text_width, text_height = font_score.size("YOU DIED")
+        text_score_size = SCREEN_WIDTH - 60, SCREEN_HEIGHT + 40
+        # Прорисовка рекорда.
+        screen.blit(text_score, text_score_size)
 
-        TEXT_SCORE = SCREEN_WIDTH - 60, SCREEN_HEIGHT + 40
-        # Прорисовка текста оповещающем о смерти.
-        screen.blit(text_score, TEXT_SCORE)
-
-        # Центральные координаты текста с просьбой перезапуска:
-        text_width, text_height = font_nickname.size("Press R to restart")
-
-        TEXT_NICKNAME = 30, SCREEN_HEIGHT + 40
-        screen.blit(text_nickname, TEXT_NICKNAME)
+        text_score_nickname = 30, SCREEN_HEIGHT + 40
+        # Прорисовка моего имени.
+        screen.blit(text_nickname, text_score_nickname)
 
 
-def handle_keys(game):
+def handle_keys(snake):
     """Функция для прослушивания событий клавиатуры в отдельном потоке.
     Это необходимо для получения наивысшей отзывчивости змеи.
     """
-    while game.running:
-        keys = pygame.key.get_pressed()
-        handle_double_keys(game, keys)
-        handle_single_keys(game, keys)
-        game.snake.update_direction()
+    keys = pygame.key.get_pressed()
+    handle_double_keys(keys, snake)
+    handle_single_keys(keys, snake)
 
 
-def handle_double_keys(game, keys):
+def handle_double_keys(keys, snake):
     """Обработка двойных нажатий клавиш."""
     double_key_actions = {
         (pygame.K_RIGHT, pygame.K_DOWN): (RIGHT, DOWN),
@@ -452,11 +453,11 @@ def handle_double_keys(game, keys):
     }
     for keys_combination, directions in double_key_actions.items():
         if keys[keys_combination[0]] and keys[keys_combination[1]]:
-            game.snake.direction = directions[0]
-            game.snake.next_direction = directions[1]
+            snake.direction = directions[0]
+            snake.next_direction = directions[1]
 
 
-def handle_single_keys(game, keys):
+def handle_single_keys(keys, snake):
     """Обработка одиночных нажатий клавиш."""
     key_actions = {
         pygame.K_UP: UP,
@@ -465,8 +466,8 @@ def handle_single_keys(game, keys):
         pygame.K_RIGHT: RIGHT,
     }
     for key, direction in key_actions.items():
-        if keys[key] and game.snake.direction != opposite_direction(direction):
-            game.snake.next_direction = direction
+        if keys[key] and snake.direction != opposite_direction(direction):
+            snake.direction = direction
 
 
 def opposite_direction(direction):
@@ -483,8 +484,6 @@ def main():
     """Запуск потоков игры."""
     # Создание объекта игры и запуск основной функции:
     game = Game()
-    input_thread = threading.Thread(target=handle_keys, args=(game,))
-    input_thread.start()
     game.main()
 
 
