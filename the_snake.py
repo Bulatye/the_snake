@@ -335,6 +335,7 @@ def check_closing_event():
             if event.key == pg.K_ESCAPE:
                 running = False
 
+
 def check_crash(snake, score):
     """Проверяет столкновение змейки с собой."""
     sound_crash = pg.mixer.Sound("sound/crash.mp3")
