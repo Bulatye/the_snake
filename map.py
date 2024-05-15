@@ -44,7 +44,7 @@ class GameField:
             self.field.append(row_field)
             self.matrix.append(row_matrix)
 
-    def draw_grid(self, screen):
+    def draw_grid(self, screen, color):
         """Рисует сетку на игровом поле
 
         Args:
@@ -54,12 +54,12 @@ class GameField:
         for distance in range(0, SCREEN_WIDTH + 30, GRID_SIZE):
             x = [distance, 0]
             y = [distance, SCREEN_HEIGHT]
-            pygame.draw.line(screen, CYAN, x, y, 3)
+            pygame.draw.line(screen, color, x, y, 3)
             count += 1
 
         count = 0
         for distance in range(0, SCREEN_HEIGHT, GRID_SIZE):
             x = [0, distance]
             y = [SCREEN_WIDTH, distance]
-            pygame.draw.line(screen, CYAN, x, y, 3)
+            pygame.draw.line(screen, color, x, y, 3)
             count += 1

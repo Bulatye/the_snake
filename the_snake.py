@@ -1,8 +1,14 @@
-import pygame
 import os
 from random import randint
 
+import pygame as pg
+
 from map import GameField
+
+
+# Состояние игры.
+running = True
+
 # Константы для размеров поля и сетки:
 SCREEN_WIDTH, SCREEN_HEIGHT = 642, 482
 GRID_SIZE = 20
@@ -20,108 +26,93 @@ LEFT = (-1, 0)
 RIGHT = (1, 0)
 
 # Цвета:
-BOARD_BACKGROUND_COLOR = (0, 0, 0)  # Цвет фона - черный
-CYAN = (111, 235, 247)  # Цвет границы ячейки
+BACKGROUND_COLOR = (0, 0, 0)  # Цвет фона - черный
 YELLOW_COLOR_1 = (243, 250, 17)  # Цвет яблока 1
 YELLOW_COLOR_2 = (211, 217, 15)  # Цвет яблока 2
 YELLOW_COLOR_3 = (245, 250, 80)  # Цвет яблока 3
-SNAKE_COLOR = (111, 235, 247)  # Цвет змейки
-APPLE_COLOR = (255, 0, 0)
+CYAN_COLOR_1 = (111, 235, 247)  # Цвет змеи 1
+CYAN_COLOR_2 = (61, 159, 168)  # Цвет змеи 2
+CYAN_COLOR_3 = (171, 248, 255)  # Цвет змеи 3
+APPLE_COLORS = [YELLOW_COLOR_1, YELLOW_COLOR_2, YELLOW_COLOR_3]
+SNAKE_COLORS = [CYAN_COLOR_1, CYAN_COLOR_2, CYAN_COLOR_3]
 
 # Скорость движения змейки:
 SPEED = 15
 
 
-# Настройка игрового окна:
-screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + 100), 0, 32)
-# Заголовок окна игрового поля:
-pygame.display.set_caption('SNAKEEEE')
-# Настройка времени:
-clock = pygame.time.Clock()
-
-
 class GameObject():
-    """Класс, представляющий игровой объект."""
+    """Класс, представляющий игровой объект.
 
-    position = (0, 0)
-    body_color = None
+    Атрибуты:
+        position (list):
+            координаты расположения игрового объекта
 
-    def __init__(self):
+    Методы:
+        draw(self, screen, body_color):
+            Отрисовывает игровой объект на экране.
+
+    """
+
+    def __init__(self, position):
         """Инициализирует базовые атрибуты игрового объекта."""
-        pass
+        self.position = position
+        raise NotImplementedError
 
-    def draw(self):
-        """
-        Абстрактный метод,
-        который должен быть переопределен в дочерни хклассах.
-        Этот метод определяет, как объект будет отображаться на экране.
-        По умолчанию он ничего не делает.
-        """
-        pass
+    def draw(self, screen, body_color):
+        """Отрисовывает игровой объект на экране."""
+        cell = self.game_field[self.position[0]][self.position[1]]
+        rect = pg.Rect(cell, (GRID_SIZE + 2, GRID_SIZE + 2))
+        pg.draw.rect(screen, body_color, rect)
 
 
 class Apple(GameObject):
     """Класс, представляющий яблоко в игре.
 
-    Этот класс отвечает за логику и отображение яблока на игровом поле.
+    Этот класс отвечает за генерацию координат и
+    отображение яблока на игровом поле.
 
     Атрибуты:
-        color (tuple): Цвет яблока в формате RGB.
-        position (tuple): Координаты положения яблока на игровом поле.
-        game_field (list): Двумерный массив, представляющий игровое поле.
+        game_field (list):
+            Двумерный массив, представляющий игровое поле.
 
     Методы:
-        __init__(snake_positions, Field):
-        Инициализирует объект яблока и устанавливает его начальное положение.
+        __init__(snake_positions):
+            Инициализирует объект яблока
+            и устанавливает его начальное положение.
+
         randomize_position(snake_positions):
-        Генерирует случайное положение яблока на игровом поле.
-        draw(screen): Отрисовывает яблоко на экране игры.
+            Генерирует случайное положение яблока на игровом поле,
+            исключая координаты змеи.
     """
 
-    body_color = [YELLOW_COLOR_1, YELLOW_COLOR_2, YELLOW_COLOR_3]
-
-    def __init__(self, snake_positions=(0, 0), field=None):
+    def __init__(self, snake_positions=(0, 0)):
         """Инициализирует объект и устанавливает начальное положение яблока.
 
         Args:
-            snake_positions (list): Координаты змеи на игровом поле.
-            Field (object): Объект поля игры.
+            snake_positions (list):
+                Координаты змеи на игровом поле.
+
+            game_field (GameField):
+                Объект представляющий логические позиции
+                поля игры.
         """
-        self.position = self.randomize_position(snake_positions)
-        self.game_field = field
+        self.randomize_position(snake_positions)
+        self.game_field = GameField(FIELD_WIDTH, FIELD_HEIGHT).field
 
     def randomize_position(self, snake_positions):
-        """Генерирует случайные координаты яблока на игровом поле.
+        """Генерирует случайные координаты яблока на игровом поле,
+            исключая координаты змеи.
 
         Args:
-            snake_positions (list): Координаты змеи на игровом поле.
-
-        Returns:
-            tuple: Координаты яблока на игровом поле.
+            snake_positions (list):
+                Координаты змеи на игровом поле.
         """
-        apple_x = randint(0, FIELD_WIDTH - 1)
-        apple_y = randint(0, FIELD_HEIGHT - 1)
-
-        while [apple_x, apple_y] in snake_positions:
+        while True:
             apple_x = randint(0, FIELD_WIDTH - 1)
             apple_y = randint(0, FIELD_HEIGHT - 1)
-
-        return (apple_x, apple_y)
-
-    def draw(self, screen, animation_frame):
-        """Отрисовывает яблоко на экране игры.
-        Реализована анимация, каждые три кадра
-        чередуются сущетсвующие цвета.
-
-        Args:
-            screen (pygame.Surface): Экран игры.
-            animation_frame (int): Кадр анимации.
-        """
-        apple_x, apple_y = self.position[0], self.position[1]
-
-        cell = self.game_field[apple_x][apple_y]
-        rect = pygame.Rect(cell, (GRID_SIZE + 1, GRID_SIZE + 1))
-        pygame.draw.rect(screen, self.body_color[animation_frame], rect)
+            if [apple_x, apple_y] not in snake_positions:
+                self.position = (apple_x, apple_y)
+                break
 
 
 class Snake(GameObject):
@@ -130,29 +121,41 @@ class Snake(GameObject):
     Этот класс обеспечивает логику и поведение змеи в игровом мире.
 
     Атрибуты:
-        direction (tuple): Текущее направление движения змеи.
-        next_direction (tuple): Следующее направление движения змеи.
-        color (tuple): Цвет змеи в формате RGB.
-        positions (list): Список координат сегментов змеи на игровом поле.
-        game_field (list): Двумерный массив, представляющий игровое поле.
+        dir (tuple):
+            Текущее направление движения змеи.
+
+        next_direction (tuple):
+            Следующее направление движения змеи.
+
+        positions (list):
+            Список координат сегментов змеи на игровом поле.
+
+        game_field (list):
+            Двумерный массив, представляющий игровое поле.
 
     Методы:
-        update_direction(): Обновляет текущее направление змеи.
-        draw(screen): Отрисовывает змею на экране игры.
-        check_apple_clash(apple_position):
-        Проверяет столкновение змеи с яблоком.
-        check_snake_clash(): Проверяет столкновение змеи с самой собой.
-        reset(): Сбрасывает состояние змеи до начального.
+        draw_snake(self, screen, body_color):
+            Отрисовывает тело змея.
+
+        move(self):
+            Обновлеяеет, удаляет координаты змеи в positions
+            с учетом ее направления.
+
+        get_next_head_position(self):
+            Вычисление следующей позиции головы.
+
+        get_head_position(self):
+            Возращает текущую позицию головы змеи.
+
+        get_tail_position(self):
+            Возращает текущую позицию хвоста змеи.
+
+        reset():
+            Сбрасывает состояние змеи до начального.
 
     """
 
-    direction = UP
-    # атрибут не используется
-    next_direction = None
-    body_color = SNAKE_COLOR
-    double_press = False
-
-    def __init__(self, positions=(0, 0), game_field=[0, 0]):
+    def __init__(self):
         """Инициализирует объект и устанавливает
         начальное положение змеи на поле.
 
@@ -160,288 +163,267 @@ class Snake(GameObject):
             snake (list): Начальное положение змеи на поле.
             field (list): Игровое поле, полезно для отрисовки змеи.
         """
-        self.positions = list(positions)
-        self.game_field = game_field
+        self.dir = RIGHT
+        self.next_direction = None
+        self.positions = [[16, 10], [16, 11], [16, 12]]
+        self.game_field = GameField(FIELD_WIDTH, FIELD_HEIGHT).field
 
-    def update_direction(self, direction, next_direction):
-        """Обновляет направление змеи."""
-        self.direction = direction
-        self.next_direction = next_direction
-        self.double_press = True
+    def draw_snake(self, screen, body_color):
+        """Отрисовывает тело змея.
+        Args:
+            screen (display.surface):
+                Экран игры.
 
-    def draw(self, screen):
-        """Основной метод змеи.
-        Отрисовывает тело змеи.
+            body_color (tuple):
+                Цвет змеи.
         """
-        # Отрисовка змеи
+        self.body_color = body_color
+        # Отрисовка змея
         for position in self.positions:
-            x_body, y_body = position[0], position[1]
-            cell = self.game_field[x_body][y_body]
-            rect = pygame.Rect(cell, (GRID_SIZE, GRID_SIZE))
-            pygame.draw.rect(screen, self.body_color, rect)
+            self.position = position[0], position[1]
+            super().draw(screen, self.body_color)
 
-    def move(self, screen):
-        """Основной метод змеи.
-        Отрисовывает голову с учетом ее направления, затирает хвост.
-        Создает движение змеи.
+    def move(self):
+        """Обновлеяеет, удаляет координаты змеи в positions
+        с учетом ее направления.
         """
-        # Обработка события, если змейка достигла края окна
+        # Добавление головы змеи в positions
+        self.positions.insert(0, self.get_next_head_position())
+        # Удаление хвоста змеи из positions
+        self.positions.pop(-1)
+
+    def get_next_head_position(self):
+        """Вычисление следующей позиции головы."""
         x_head, y_head = self.get_head_position()
-        # Флаг указывающий, что змейка достигла края
-        end_field = True
 
         # Если голова змеи достигла края,
         # переносим голову в противоположнную сторону
-        if y_head == FIELD_HEIGHT - 1 and self.direction == DOWN:
-            y_head = 0
-        elif y_head == 0 and self.direction == UP:
-            y_head = FIELD_HEIGHT - 1
-        elif x_head == FIELD_WIDTH - 1 and self.direction == RIGHT:
-            x_head = 0
-        elif x_head == 0 and self.direction == LEFT:
-            x_head = FIELD_WIDTH - 1
+        if y_head == FIELD_HEIGHT - 1 and self.dir == DOWN:
+            self.position = [x_head, 0]
+        elif y_head == 0 and self.dir == UP:
+            self.position = [x_head, FIELD_HEIGHT - 1]
+        elif x_head == FIELD_WIDTH - 1 and self.dir == RIGHT:
+            self.position = [0, y_head]
+        elif x_head == 0 and self.dir == LEFT:
+            self.position = [FIELD_WIDTH - 1, y_head]
         else:
-            end_field = False
+            # Если змея не достигла края, просто обновляем ее позицию
+            self.position = [x_head + self.dir[0], y_head + self.dir[1]]
 
-        if not end_field:
-            # Получаем следующие координаты головы змеи
-            x_head_next = x_head + self.direction[0]
-            y_head_next = y_head + self.direction[1]
-        else:
-            x_head_next, y_head_next = x_head, y_head
-
-        self.positions.insert(0, [x_head_next, y_head_next])
-
-        # Получаем координаты головы на игровом поле
-        snake_head = self.game_field[x_head_next][y_head_next]
-        # Рисуем голову змеи
-        head_rect = pygame.Rect(snake_head, (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(screen, self.body_color, head_rect)
-
-        # Затирание последнего сегмента
-        x_tail, y_tail = self.get_tail_position()
-        snake_tail = self.game_field[x_tail][y_tail]
-        last_rect = pygame.Rect(snake_tail, (GRID_SIZE, GRID_SIZE))
-        pygame.draw.rect(screen, BACKGROUND, last_rect)
-
-        # Удаление хвоста змеи из массива
-        self.positions.pop(-1)
+        return self.position
 
     def get_head_position(self):
-        """Возращает позицию головы змеи."""
-        x_head = self.positions[0][0]
-        y_head = self.positions[0][1]
-        return x_head, y_head
+        """Возращает текущую позицию головы змеи."""
+        return self.positions[0]
 
     def get_tail_position(self):
-        """Возращает позицию хвоста змеи."""
-        x_tail = self.positions[-1][0]
-        y_tail = self.positions[-1][1]
-        return x_tail, y_tail
-
-    def check_apple_collision(self, apple_position):
-        """Возвращает True, если голова змеи столкнулась с яблоком."""
-        if tuple(self.positions[0]) == apple_position:
-            self.positions.append(self.positions[-1] + list(self.direction))
-            self.positions.append(self.positions[-1] + list(self.direction))
-            return True
-
-    def check_snake_collision(self):
-        """Сбрасывает змею, если ее голова столкнулась с ее телом."""
-        for i in range(1, len(self.positions)):
-            if self.positions[0] == self.positions[i]:
-                return False
-        return True
+        """Возращает текущую позицию хвоста змеи."""
+        return self.positions[-1]
 
     def reset(self):
-        """Сбрасывает змею, устанавливая ее в начальное состояние."""
-        snake_body = [[16, 10], [16, 11], [16, 12]]
-        self.positions = snake_body
-        self.next_direction = None
+        """Сбрасывает состояние змеи до начального."""
+        self = self.__init__()
 
 
-class Game:
-    """Класс, представляющий игру "Змейка".
-
-    Этот класс обеспечивает основную логику игры.
-
-    Attributes:
-        screen: Объект экрана Pygame.
-        clock: Объект Pygame Clock, используемый для управления скоростью игры.
-        field: Объект игрового поля.
-        snake: Объект змейки.
-        apple: Объект яблока.
-        font_path: Путь к файлу шрифта.
-        font_size_h1: Размер шрифта для заголовка 1.
-        font_size_h2: Размер шрифта для заголовка 2.
-        font_size_footer_text: Размер шрифта для текста в нижнем колонтитуле.
-        running: Флаг для указания состояния игры (запущена или завершена).
-        colors: Список цветов для анимации яблока.
-        apple_animation_frame: Переменная для анимации яблока.
-        score: Очки игрока.
-        nickname: Никнейм игрока.
-
-    Methods:
-        __init__(): Инициализация игры.
-        main(): Основная функция игры.
-        event_listener(): Функция для прослушивания событий клавиатуры.
-        view_death_screen(): Функция для отображения экрана смерти.
-        view_name_and_score():
-        Функция для отображения имени игрока и текущего счета.
-    """
-
+def main():
+    """Основная функция игры."""
+    global running
     font = os.path.join("fonts", "8bitOperatorPlus8-Regular.ttf")
     # Размеры шрифтов.
-    font_size_h1 = 72
-    font_size_h2 = 24
-    font_size_footer_text = 32
-
-    # Состояние игры.
-    running = True
-    # Счетчики анимации яблока.
-    apple_animation_frame = 0
-    animation_timer = 0
+    fs_h1 = 72
+    fs_h2 = 24
 
     score = 0
-    nickname = "bulatue"
+    # Счетчики анимации яблока.
+    anim_time = 0
+    anim_tic = 0
+    # Инициализация PyGame:
+    pg.init()
 
-    def __init__(self):
-        """Инициализация игры."""
-        # Инициализация PyGame:
-        pygame.init()
-        # Создание объекта игрового поля:
-        self.field = GameField(FIELD_WIDTH, FIELD_HEIGHT)
-        # Создание объекта змейки:
-        self.snake = Snake([[16, 10], [16, 11], [16, 12]], self.field.field)
-        # Создание объекта яблока:
-        self.apple = Apple(self.snake.positions, self.field.field)
+    # Создание объекта змейки:
+    snake = Snake()
+    field = GameField(FIELD_WIDTH, FIELD_HEIGHT)
+    # Создание объекта яблока:
+    apple = Apple(snake.positions)
+    sound_eat = pg.mixer.Sound("sound/eat.mp3")
+    sound_move = pg.mixer.Sound("sound/move.mp3")
+    crash = False
 
-    def main(self):
-        """Основная функция игры."""
-        while self.running:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.running = False
-            # Проверка столкновения змейки с самой собой:
-            if not self.snake.check_snake_collision():
-                self.view_death_screen()
-            else:
-                handle_keys(self.snake)
-                # Управление частотой кадров:
-                clock.tick(SPEED)
-                # Очистка экрана:
-                screen.fill(BACKGROUND)
-                # Отрисвока имени и рекорда
-                self.view_name_and_score()
-                # Двигаем змейку
-                self.snake.move(screen)
-                # Отрисовка змейки:
-                self.snake.draw(screen)
-                # Проверка столкновения змейки с яблоком:
-                if self.snake.check_apple_collision(self.apple.position):
-                    # Получение нового яблока:
-                    self.apple = Apple(self.snake.positions, self.field.field)
-                    screen.fill(CYAN)
-                    self.score += 1
+    # Настройка игрового окна:
+    screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + 100), 0, 32)
+    # Заголовок окна игрового поля:
+    pg.display.set_caption('SNAKEEEE')
+    # Настройка времени:
+    clock = pg.time.Clock()
 
-                # Отрисовка сетки:
-                self.field.draw_grid(screen)
-                # Отрисовка яблока c анимацией:
-                if self.animation_timer == 3:
-                    self.apple_animation_frame += 1
-                    self.animation_timer = 0
+    while running:
+        check_closing_event()
 
-                if self.apple_animation_frame > 2:
-                    self.apple_animation_frame = 0
+        # Проверка столкновения змейки с самой собой:
+        if not crash:
+            crash = check_crash(snake, score)
 
-                self.apple.draw(screen, self.apple_animation_frame)
-                self.animation_timer += 1
+        if crash:
+            score, crash = view_death(screen, font, fs_h1, fs_h2, score, snake)
+        else:
+            handle_keys(snake, sound_move)
+            # Управление частотой кадров:
+            clock.tick(SPEED)
+            # Очистка экрана:
+            screen.fill(BACKGROUND)
+            # Отрисвока имени и рекорда
+            view_name_and_score(screen, font, fs_h2, score)
+            # Двигаем змейку
+            snake.move()
 
-                # Обновление экрана:
-                pygame.display.update()
+            # Отрисовка сетки:
+            field.draw_grid(screen, CYAN_COLOR_1)
+            # Изменения счетчиков анимации
+            anim_tic, anim_time = animation_tic(anim_tic, anim_time)
+            anim_tic += 1
 
-        # Завершение игры:
-        pygame.quit()
+            apple.draw(screen, APPLE_COLORS[anim_time])
+            # Отрисовка змейки:
+            snake.draw_snake(screen, SNAKE_COLORS[anim_time])
 
-    def view_death_screen(self):
-        """Функция для отображения экрана смерти."""
-        # Отчищаем экран.
-        print(f"Score: {self.score}")
-        screen.fill(BACKGROUND)
-        # Уведомляем пользователя о его смерти.
-        # Спрашиваем хочет ли он начать сначала.
+            if check_snake_collision(snake, apple.position):
+                apple = Apple(snake.positions)
+                score += 1
+                sound_eat.play()
+                screen.fill(CYAN_COLOR_1)
 
-        # Создание объектов текста
-        font_you_died = pygame.font.Font(self.font, self.font_size_h1)
-        font_press_r = pygame.font.Font(self.font, self.font_size_h2)
+            # Обновление экрана:
+            pg.display.update()
 
-        str_h1 = "YOU DIED"
-        str_h2 = "Press R to Restart"
-        text_you_died = font_you_died.render(str_h1, True, CYAN)
-        text_press_r = font_press_r.render(str_h2, True, YELLOW_COLOR_3)
-
-        # Центральные координаты текста оповещающем о смерти:
-        text_width, text_height = font_you_died.size("YOU DIED")
-
-        x = (SCREEN_WIDTH - text_width) // 2
-        y = ((SCREEN_HEIGHT + 100) - text_height * 2) // 2
-        DEATH_TEXT_CENTER = x, y
-        # Прорисовка текста оповещающем о смерти.
-        screen.blit(text_you_died, DEATH_TEXT_CENTER)
-
-        # Центральные координаты текста с просьбой перезапуска:
-        text_width, text_height = font_press_r.size("Press R to restart")
-
-        x = (SCREEN_WIDTH - text_width) // 2
-        y = ((SCREEN_HEIGHT + 100) + text_height) // 2
-        PRESS_R_TEXT_CENTER = x, y
-        # Прорисовка текста оповещающем о смерти.
-        screen.blit(text_press_r, PRESS_R_TEXT_CENTER)
-        # обновляем экран
-        pygame.display.update()
-
-        # Прослушиваем событие нажатия кнопки R
-        for event in pygame.event.get():
-            keys = pygame.key.get_pressed()
-
-            if event.type == pygame.QUIT:
-                self.running = False
-            elif keys[pygame.K_r]:
-                # Перезапускаем игру
-                self.score = 0
-                self.snake.direction = UP
-                self.snake.reset()
-
-    def view_name_and_score(self):
-        """Функция для отображения имени игрока и текущего счета."""
-        # Создание объектов текста
-        font_score = pygame.font.Font(self.font, self.font_size_h2)
-        font_nickname = pygame.font.Font(self.font, self.font_size_h2)
-
-        text_score = font_score.render(str(self.score), True, YELLOW_COLOR_3)
-        text_nickname = font_nickname.render(self.nickname, True, CYAN)
-
-        text_score_size = SCREEN_WIDTH - 60, SCREEN_HEIGHT + 40
-        # Прорисовка рекорда.
-        screen.blit(text_score, text_score_size)
-
-        text_score_nickname = 30, SCREEN_HEIGHT + 40
-        # Прорисовка моего имени.
-        screen.blit(text_nickname, text_score_nickname)
+    # Завершение игры:
+    pg.quit()
 
 
-def handle_keys(snake):
+def animation_tic(anim_tic, anim_time):
+    """сопровождает анимацию"""
+    # Отрисовка яблока c анимацией:
+    if anim_tic == 3:
+        anim_time += 1
+        anim_tic = 0
+
+    if anim_time > 2:
+        anim_time = 0
+
+    return anim_tic, anim_time
+
+
+def check_snake_collision(snake, apple_position):
+    """Проверяет столкновение яблока и змейки"""
+    if tuple(snake.positions[0]) == apple_position:
+        snake.positions.append(snake.positions[-1] + list(snake.dir))
+        snake.positions.append(snake.positions[-1] + list(snake.dir))
+        return True
+    return False
+
+
+def check_closing_event():
+    """Проверяет закрывающие событие"""
+    global running
+    for event in pg.event.get():
+        if event.type == pg.QUIT:
+            running = False
+
+
+def check_crash(snake, score):
+    """Проверяет столкновение змейки с собой."""
+    sound_crash = pg.mixer.Sound("sound/crash.mp3")
+
+    for i in range(1, len(snake.positions)):
+        if snake.positions[0] == snake.positions[i]:
+            sound_crash.play()
+            print(f"Score: {score}")
+            return True
+
+
+def view_death(screen, font, fs_h1, fs_h2, score, snake):
+    """Функция для отображения экрана смерти."""
+    global running
+    sound_reload = pg.mixer.Sound("sound/reload.mp3")
+    # Очищаем экран.
+    screen.fill(BACKGROUND)
+    # Уведомляем пользователя о его смерти.
+    # Спрашиваем хочет ли он начать сначала.
+
+    # Создание объектов текста
+    font_you_died = pg.font.Font(font, fs_h1)
+    font_press_r = pg.font.Font(font, fs_h2)
+
+    str_h1 = "YOU DIED"
+    str_h2 = "Press R to Restart"
+    text_you_died = font_you_died.render(str_h1, True, CYAN_COLOR_1)
+    text_press_r = font_press_r.render(str_h2, True, YELLOW_COLOR_3)
+
+    # Центральные координаты текста оповещающем о смерти:
+    text_width, text_height = font_you_died.size("YOU DIED")
+
+    x = (SCREEN_WIDTH - text_width) // 2
+    y = ((SCREEN_HEIGHT + 100) - text_height * 2) // 2
+    DEATH_TEXT_CENTER = x, y
+    # Прорисовка текста оповещающем о смерти.
+    screen.blit(text_you_died, DEATH_TEXT_CENTER)
+
+    # Центральные координаты текста с просьбой перезапуска:
+    text_width, text_height = font_press_r.size("Press R to restart")
+
+    x = (SCREEN_WIDTH - text_width) // 2
+    y = ((SCREEN_HEIGHT + 100) + text_height) // 2
+    PRESS_R_TEXT_CENTER = x, y
+    # Прорисовка текста оповещающем о смерти.
+    screen.blit(text_press_r, PRESS_R_TEXT_CENTER)
+    # обновляем экран
+    pg.display.update()
+
+    # Прослушиваем событие нажатия кнопки R
+    for event in pg.event.get():
+        keys = pg.key.get_pressed()
+        if event.type == pg.QUIT:
+            running = False
+        if keys[pg.K_r]:
+            # Перезапускаем игру
+            snake.reset()
+            sound_reload.play()
+            return 0, False
+
+    return 0, True
+
+
+def view_name_and_score(screen, font, font_size, score):
+    """Функция для отображения имени игрока и текущего счета."""
+    nickname = os.getlogin()
+    # Создание объектов текста
+    font_score = pg.font.Font(font, font_size)
+    font_nickname = pg.font.Font(font, font_size)
+
+    text_score = font_score.render(str(score), True, YELLOW_COLOR_3)
+    text_nickname = font_nickname.render(nickname, True, CYAN_COLOR_1)
+
+    text_score_size = SCREEN_WIDTH - 60, SCREEN_HEIGHT + 40
+    # Прорисовка рекорда.
+    screen.blit(text_score, text_score_size)
+
+    text_score_nickname = 30, SCREEN_HEIGHT + 40
+    # Прорисовка моего имени.
+    screen.blit(text_nickname, text_score_nickname)
+
+
+def handle_keys(snake, sound_move):
     """Обработка одиночных нажатий клавиш."""
-    keys = pygame.key.get_pressed()
+    keys = pg.key.get_pressed()
     key_actions = {
-        pygame.K_UP: UP,
-        pygame.K_DOWN: DOWN,
-        pygame.K_LEFT: LEFT,
-        pygame.K_RIGHT: RIGHT,
+        pg.K_UP: UP,
+        pg.K_DOWN: DOWN,
+        pg.K_LEFT: LEFT,
+        pg.K_RIGHT: RIGHT,
     }
     for key, direction in key_actions.items():
-        if keys[key] and snake.direction != opposite_direction(direction):
-            snake.direction = direction
+        if keys[key] and snake.dir != opposite_direction(direction):
+            snake.dir = direction
+            sound_move.play()
             return None
 
 
@@ -453,13 +435,6 @@ def opposite_direction(direction):
         LEFT: RIGHT,
         RIGHT: LEFT,
     }[direction]
-
-
-def main():
-    """Запуск потоков игры."""
-    # Создание объекта игры и запуск основной функции:
-    game = Game()
-    game.main()
 
 
 if __name__ == '__main__':

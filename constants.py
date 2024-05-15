@@ -9,10 +9,10 @@ FIELD_WIDTH = 32
 FIELD_HEIGHT = 24
 
 # Направления движения:
-UP = (0, -1)
-DOWN = (0, 1)
-LEFT = (-1, 0)
-RIGHT = (1, 0)
+UP = [0, -1]
+DOWN = [0, 1]
+LEFT = [-1, 0]
+RIGHT = [1, 0]
 
 # Цвета:
 BOARD_BACKGROUND_COLOR = (0, 0, 0)  # Цвет фона - черный
