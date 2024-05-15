@@ -1,3 +1,4 @@
+"""Реализация игровых классов и игровой логики змейки."""
 import os
 from random import randint
 
@@ -26,7 +27,7 @@ LEFT = (-1, 0)
 RIGHT = (1, 0)
 
 # Цвета:
-BACKGROUND_COLOR = (0, 0, 0)  # Цвет фона - черный
+BOARD_BACKGROUND_COLOR = (0, 0, 0)  # Цвет фона - черный
 YELLOW_COLOR_1 = (243, 250, 17)  # Цвет яблока 1
 YELLOW_COLOR_2 = (211, 217, 15)  # Цвет яблока 2
 YELLOW_COLOR_3 = (245, 250, 80)  # Цвет яблока 3
@@ -38,6 +39,11 @@ SNAKE_COLORS = [CYAN_COLOR_1, CYAN_COLOR_2, CYAN_COLOR_3]
 
 # Скорость движения змейки:
 SPEED = 15
+
+# Настройка игрового окна:
+screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + 100), 0, 32)
+# Настройка времени:
+clock = pg.time.Clock()
 
 
 class GameObject():
@@ -53,10 +59,12 @@ class GameObject():
 
     """
 
-    def __init__(self, position):
+    position = [0, 0]
+    body_color = 0, 0, 0
+
+    def __init__(self, position=[0, 0]):
         """Инициализирует базовые атрибуты игрового объекта."""
         self.position = position
-        raise NotImplementedError
 
     def draw(self, screen, body_color):
         """Отрисовывает игровой объект на экране."""
@@ -85,7 +93,7 @@ class Apple(GameObject):
             исключая координаты змеи.
     """
 
-    def __init__(self, snake_positions=(0, 0)):
+    def __init__(self, snake_positions=[0, 0]):
         """Инициализирует объект и устанавливает начальное положение яблока.
 
         Args:
@@ -100,12 +108,9 @@ class Apple(GameObject):
         self.game_field = GameField(FIELD_WIDTH, FIELD_HEIGHT).field
 
     def randomize_position(self, snake_positions):
-        """Генерирует случайные координаты яблока на игровом поле,
-            исключая координаты змеи.
+        """Генерирует случайные координаты яблока на игровом поле.
 
-        Args:
-            snake_positions (list):
-                Координаты змеи на игровом поле.
+        Args: snake_positions (list): Координаты змеи на игровом поле.
         """
         while True:
             apple_x = randint(0, FIELD_WIDTH - 1)
@@ -121,7 +126,7 @@ class Snake(GameObject):
     Этот класс обеспечивает логику и поведение змеи в игровом мире.
 
     Атрибуты:
-        dir (tuple):
+        direction (tuple):
             Текущее направление движения змеи.
 
         next_direction (tuple):
@@ -156,20 +161,20 @@ class Snake(GameObject):
     """
 
     def __init__(self):
-        """Инициализирует объект и устанавливает
-        начальное положение змеи на поле.
+        """Инициализирует объект и устанавливает положение змеи на поле.
 
         Args:
             snake (list): Начальное положение змеи на поле.
             field (list): Игровое поле, полезно для отрисовки змеи.
         """
-        self.dir = RIGHT
+        self.direction = RIGHT
         self.next_direction = None
         self.positions = [[16, 10], [16, 11], [16, 12]]
         self.game_field = GameField(FIELD_WIDTH, FIELD_HEIGHT).field
 
     def draw_snake(self, screen, body_color):
         """Отрисовывает тело змея.
+
         Args:
             screen (display.surface):
                 Экран игры.
@@ -180,13 +185,11 @@ class Snake(GameObject):
         self.body_color = body_color
         # Отрисовка змея
         for position in self.positions:
-            self.position = position[0], position[1]
+            self.position = [position[0], position[1]]
             super().draw(screen, self.body_color)
 
     def move(self):
-        """Обновлеяеет, удаляет координаты змеи в positions
-        с учетом ее направления.
-        """
+        """Обновлеяеет, удаляет координаты змеи в positions."""
         # Добавление головы змеи в positions
         self.positions.insert(0, self.get_next_head_position())
         # Удаление хвоста змеи из positions
@@ -198,19 +201,25 @@ class Snake(GameObject):
 
         # Если голова змеи достигла края,
         # переносим голову в противоположнную сторону
-        if y_head == FIELD_HEIGHT - 1 and self.dir == DOWN:
+        if y_head == FIELD_HEIGHT - 1 and self.direction == DOWN:
             self.position = [x_head, 0]
-        elif y_head == 0 and self.dir == UP:
+        elif y_head == 0 and self.direction == UP:
             self.position = [x_head, FIELD_HEIGHT - 1]
-        elif x_head == FIELD_WIDTH - 1 and self.dir == RIGHT:
+        elif x_head == FIELD_WIDTH - 1 and self.direction == RIGHT:
             self.position = [0, y_head]
-        elif x_head == 0 and self.dir == LEFT:
+        elif x_head == 0 and self.direction == LEFT:
             self.position = [FIELD_WIDTH - 1, y_head]
         else:
             # Если змея не достигла края, просто обновляем ее позицию
-            self.position = [x_head + self.dir[0], y_head + self.dir[1]]
+
+            self.position[0] = x_head + self.direction[0]
+            self.position[1] = y_head + self.direction[1]
 
         return self.position
+
+    def update_direction(self, direction):
+        """Обновляет направление."""
+        self.direction = direction
 
     def get_head_position(self):
         """Возращает текущую позицию головы змеи."""
@@ -249,16 +258,13 @@ def main():
     sound_move = pg.mixer.Sound("sound/move.mp3")
     crash = False
 
-    # Настройка игрового окна:
-    screen = pg.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT + 100), 0, 32)
     # Заголовок окна игрового поля:
     pg.display.set_caption('SNAKEEEE')
-    # Настройка времени:
-    clock = pg.time.Clock()
 
     while running:
         check_closing_event()
-
+        # Управление частотой кадров:
+        clock.tick(SPEED)
         # Проверка столкновения змейки с самой собой:
         if not crash:
             crash = check_crash(snake, score)
@@ -267,12 +273,10 @@ def main():
             score, crash = view_death(screen, font, fs_h1, fs_h2, score, snake)
         else:
             handle_keys(snake, sound_move)
-            # Управление частотой кадров:
-            clock.tick(SPEED)
             # Очистка экрана:
             screen.fill(BACKGROUND)
             # Отрисвока имени и рекорда
-            view_name_and_score(screen, font, fs_h2, score)
+            view_name_and_score(font, fs_h2, score)
             # Двигаем змейку
             snake.move()
 
@@ -300,7 +304,7 @@ def main():
 
 
 def animation_tic(anim_tic, anim_time):
-    """сопровождает анимацию"""
+    """сопровождает анимацию."""
     # Отрисовка яблока c анимацией:
     if anim_tic == 3:
         anim_time += 1
@@ -313,16 +317,16 @@ def animation_tic(anim_tic, anim_time):
 
 
 def check_snake_collision(snake, apple_position):
-    """Проверяет столкновение яблока и змейки"""
+    """Проверяет столкновение яблока и змейки."""
     if tuple(snake.positions[0]) == apple_position:
-        snake.positions.append(snake.positions[-1] + list(snake.dir))
-        snake.positions.append(snake.positions[-1] + list(snake.dir))
+        snake.positions.append(snake.positions[-1] + list(snake.direction))
+        snake.positions.append(snake.positions[-1] + list(snake.direction))
         return True
     return False
 
 
 def check_closing_event():
-    """Проверяет закрывающие событие"""
+    """Проверяет закрывающие событие."""
     global running
     for event in pg.event.get():
         if event.type == pg.QUIT:
@@ -359,22 +363,22 @@ def view_death(screen, font, fs_h1, fs_h2, score, snake):
     text_press_r = font_press_r.render(str_h2, True, YELLOW_COLOR_3)
 
     # Центральные координаты текста оповещающем о смерти:
-    text_width, text_height = font_you_died.size("YOU DIED")
+    text_width, text_height = font_you_died.size(str_h1)
 
     x = (SCREEN_WIDTH - text_width) // 2
     y = ((SCREEN_HEIGHT + 100) - text_height * 2) // 2
-    DEATH_TEXT_CENTER = x, y
+    death_text_center = x, y
     # Прорисовка текста оповещающем о смерти.
-    screen.blit(text_you_died, DEATH_TEXT_CENTER)
+    screen.blit(text_you_died, death_text_center)
 
     # Центральные координаты текста с просьбой перезапуска:
-    text_width, text_height = font_press_r.size("Press R to restart")
+    text_width, text_height = font_press_r.size(str_h2)
 
     x = (SCREEN_WIDTH - text_width) // 2
     y = ((SCREEN_HEIGHT + 100) + text_height) // 2
-    PRESS_R_TEXT_CENTER = x, y
+    press_r_text_center = x, y
     # Прорисовка текста оповещающем о смерти.
-    screen.blit(text_press_r, PRESS_R_TEXT_CENTER)
+    screen.blit(text_press_r, press_r_text_center)
     # обновляем экран
     pg.display.update()
 
@@ -392,7 +396,7 @@ def view_death(screen, font, fs_h1, fs_h2, score, snake):
     return 0, True
 
 
-def view_name_and_score(screen, font, font_size, score):
+def view_name_and_score(font, font_size, score):
     """Функция для отображения имени игрока и текущего счета."""
     nickname = os.getlogin()
     # Создание объектов текста
@@ -421,8 +425,8 @@ def handle_keys(snake, sound_move):
         pg.K_RIGHT: RIGHT,
     }
     for key, direction in key_actions.items():
-        if keys[key] and snake.dir != opposite_direction(direction):
-            snake.dir = direction
+        if keys[key] and snake.direction != opposite_direction(direction):
+            snake.update_direction(direction)
             sound_move.play()
             return None
 
