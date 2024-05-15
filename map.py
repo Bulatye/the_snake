@@ -2,7 +2,6 @@ from constants import (
     SCREEN_WIDTH,
     SCREEN_HEIGHT,
     GRID_SIZE,
-    CYAN,
     FIELD_WIDTH,
     FIELD_HEIGHT,
 )
