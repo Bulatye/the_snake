@@ -401,7 +401,7 @@ def view_death(screen, font, fs_h1, fs_h2, score, snake):
 
 def view_name_and_score(font, font_size, score):
     """Функция для отображения имени игрока и текущего счета."""
-    nickname = "bulatue"
+    nickname = os.getlogin()
     # Создание объектов текста
     font_score = pg.font.Font(font, font_size)
     font_nickname = pg.font.Font(font, font_size)
