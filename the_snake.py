@@ -254,6 +254,8 @@ def main():
     field = GameField(FIELD_WIDTH, FIELD_HEIGHT)
     # Создание объекта яблока:
     apple = Apple(snake.positions)
+    sound_eat = pg.mixer.Sound("sound/eat.mp3")
+    sound_move = pg.mixer.Sound("sound/move.mp3")
     crash = False
 
     # Заголовок окна игрового поля:
@@ -270,7 +272,7 @@ def main():
         if crash:
             score, crash = view_death(screen, font, fs_h1, fs_h2, score, snake)
         else:
-            handle_keys(snake)
+            handle_keys(snake, sound_move)
             # Очистка экрана:
             screen.fill(BACKGROUND)
             # Отрисвока имени и рекорда
@@ -291,6 +293,7 @@ def main():
             if check_snake_collision(snake, apple.position):
                 apple = Apple(snake.positions)
                 score += 1
+                sound_eat.play()
                 screen.fill(CYAN_COLOR_1)
 
             # Обновление экрана:
@@ -335,19 +338,24 @@ def check_closing_event():
 
 def check_crash(snake, score):
     """Проверяет столкновение змейки с собой."""
+    sound_crash = pg.mixer.Sound("sound/crash.mp3")
+
     for i in range(1, len(snake.positions)):
         if snake.positions[0] == snake.positions[i]:
+            sound_crash.play()
             print(f"Score: {score}")
             return True
 
 
 def view_death(screen, font, fs_h1, fs_h2, score, snake):
     """Функция для отображения экрана смерти."""
+    global running
+    sound_reload = pg.mixer.Sound("sound/reload.mp3")
     # Очищаем экран.
     screen.fill(BACKGROUND)
     # Уведомляем пользователя о его смерти.
     # Спрашиваем хочет ли он начать сначала.
-    global running
+
     # Создание объектов текста
     font_you_died = pg.font.Font(font, fs_h1)
     font_press_r = pg.font.Font(font, fs_h2)
@@ -365,6 +373,7 @@ def view_death(screen, font, fs_h1, fs_h2, score, snake):
     death_text_center = x, y
     # Прорисовка текста оповещающем о смерти.
     screen.blit(text_you_died, death_text_center)
+
     # Центральные координаты текста с просьбой перезапуска:
     text_width, text_height = font_press_r.size(str_h2)
 
@@ -384,6 +393,7 @@ def view_death(screen, font, fs_h1, fs_h2, score, snake):
         if keys[pg.K_r]:
             # Перезапускаем игру
             snake.reset()
+            sound_reload.play()
             return 0, False
 
     return 0, True
@@ -408,7 +418,7 @@ def view_name_and_score(font, font_size, score):
     screen.blit(text_nickname, text_score_nickname)
 
 
-def handle_keys(snake):
+def handle_keys(snake, sound_move):
     """Обработка одиночных нажатий клавиш."""
     keys = pg.key.get_pressed()
     key_actions = {
@@ -420,6 +430,7 @@ def handle_keys(snake):
     for key, direction in key_actions.items():
         if keys[key] and snake.direction != opposite_direction(direction):
             snake.update_direction(direction)
+            sound_move.play()
             return None
 
 
@@ -436,5 +447,5 @@ def opposite_direction(direction):
 if __name__ == '__main__':
     try:
         main()
-    except Exception:
+    except Exception as _:
         print("Snake is not alive")
