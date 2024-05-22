@@ -119,7 +119,7 @@ class Snake(GameObject):
 
 def main():
     """Основная функция игры."""
-    running = True 
+    running = True
 
     pg.init()
 
