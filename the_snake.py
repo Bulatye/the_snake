@@ -1,5 +1,6 @@
 """Змейка."""
 from random import randint as ri
+
 import pygame as pg
 
 # Константы для размеров поля и сетки
@@ -33,9 +34,9 @@ clock = pg.time.Clock()
 class GameObject:
     """Класс, представляющий игровой объект."""
 
-    def __init__(self, position=None, body_color=APPLE_COLOR):
+    def __init__(self, body_color=APPLE_COLOR):
         """Инициализирует базовые атрибуты игрового объекта."""
-        self.position = position if position else CENTER.copy()
+        self.position = CENTER.copy()
         self.body_color = body_color
 
     def draw_rect(self, screen):
@@ -72,11 +73,12 @@ class Snake(GameObject):
 
     def __init__(self):
         """Инициализирует объект и устанавливает положение змеи на поле."""
-        super().__init__(position=CENTER.copy(), body_color=SNAKE_COLOR)
+        super().__init__(body_color=SNAKE_COLOR)
         self.length = 1
         self.positions = [self.position]
         self.direction = RIGHT
         self.next_direction = None
+        self.last = None
 
     def draw(self, screen):
         """Отрисовывает тело змеи."""
@@ -84,19 +86,31 @@ class Snake(GameObject):
             self.position = position
             self.draw_rect(screen)
 
+        if self.last:
+            self._draw_last(screen)
+
+    def _draw_last(self, screen):
+        """Отрисовывает последний элемент змеи."""
+        self.body_color = BOARD_BACKGROUND_COLOR
+        self.position = self.last
+        self.draw_rect(screen)
+        self.body_color = SNAKE_COLOR
+
     def move(self):
         """Обновляет координаты змеи в positions."""
-        x, y = self.get_head_position()
-        dx, dy = self.direction
+        head_x, head_y = self.get_head_position()
+        direction_x, direction_y = self.direction
 
         new_head = (
-            (x + dx * GRID_SIZE) % SCREEN_WIDTH,
-            (y + dy * GRID_SIZE) % SCREEN_HEIGHT
+            (head_x + direction_x * GRID_SIZE) % SCREEN_WIDTH,
+            (head_y + direction_y * GRID_SIZE) % SCREEN_HEIGHT
         )
         self.positions.insert(0, new_head)
 
         if len(self.positions) > self.length:
-            self.positions.pop()
+            self.last = self.positions.pop()
+        else:
+            self.last = None
 
     def update_direction(self):
         """Обновляет направление."""
@@ -139,17 +153,17 @@ def main():
         snake.update_direction()
         snake.move()
 
-        for i in range(1, len(snake.positions)):
-            if snake.positions[0] == snake.positions[i]:
+        if snake.length > 4:
+            if snake.get_head_position() in snake.positions[1:]:
+                screen.fill(BOARD_BACKGROUND_COLOR)
+                print(snake.length)
                 snake.reset()
                 apple.randomize_position(snake.positions)
-                break
 
         if snake.get_head_position() == apple.position:
             snake.length += 1
             apple.randomize_position(snake.positions)
 
-        screen.fill(BOARD_BACKGROUND_COLOR)
         apple.draw(screen)
         snake.draw(screen)
         pg.display.update()
